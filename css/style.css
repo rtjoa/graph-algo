@@ -1,0 +1,407 @@
+#header {
+	top: 0px;
+	width: 100%;
+	background-color: rgb(50,50,50);
+	color: white;
+	font-family: "Century Gothic";
+	font-size: 20px;
+	margin: 0;
+}
+
+#padded-header {
+	padding: 8px;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #fff;
+	overflow: hidden;
+	height: 100%;
+}
+
+#frame {
+	overflow: hidden;
+	position: relative;
+}
+
+#zoom-menu {
+	position: absolute;
+	right: 7px;
+	top: 7px;
+}
+
+.unselectable {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.vertical-toolbar {
+	right: 0px;
+	width: 30px;
+	margin-bottom: 7px;
+	box-shadow: 0px 0px 3px rgba(0, 0, 0, .5);
+	border-radius: 5px;
+	text-align: center;
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.vertical-toolbar div {
+	height: 30px;
+	border-width: 0px;
+	border-bottom-width: 1px;
+}
+
+.vertical-toolbar div:first-child {
+    border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+.vertical-toolbar div:last-child {
+    border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	border-bottom-width: 0px;
+}
+
+.tool-button {
+	color: rgb(100,100,100);
+	background-color: rgb(240,240,240);
+	font-family: Arial, sans-serif;
+	cursor: pointer;
+	border: 1px solid rgb(220,220,220);
+	padding-top: 4px;
+}
+
+.tool-button:hover {
+	background-color: rgb(235,235,235);
+	color: black;
+}
+
+.tool-button:active {
+	background-color: rgb(230,230,230);
+}
+
+#bottom-right-menu {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+#speed-menu {
+	font-size: 15px;
+	font-family: sans-serif;
+	right: 0;
+	display: flex;
+	margin-bottom: 6px;
+	font-size: 15px;
+}
+
+#speed-container {
+	width: 50px;
+	text-align: center;
+	padding-top: 2px;
+	color: rgb(150,150,150);
+	background-color: rgb(250,250,250);
+	border: 1px solid rgb(220,220,220);
+	border-left: none;
+	border-right: none;
+}
+
+#speed-up,
+#slow-down {
+	padding-bottom: 2px;
+	padding-top: 0px;
+	width: 23px;
+	text-align: center;
+	color: rgb(150,150,150);
+}
+
+#slow-down {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+#speed-up {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+#visualize-menu {
+	box-shadow: 0px 0px 3px rgba(0, 0, 0, .25);
+	border-radius: 5px;
+}
+
+#visualize-menu :first-child {
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+#visualize-menu :last-child {
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+#visualize {
+	padding: 15px;
+	background-color: rgb(200,200,200);
+	color: black;
+	font-family: 'Trebuchet MS', sans-serif;
+	font-size: 18px;
+	cursor: pointer;
+	font-weight: 700;
+	text-align: center;
+	border: 1px solid rgb(150,150,150);
+	border-top-width: 0px;
+}
+
+#visualize:hover {
+	background-color: rgb(205,200,200);
+}
+
+#visualize:active {
+	background-color: rgb(210,190,190);
+}
+
+#algo-select {
+	background-color: white;
+	color: rgb(100,100,100);
+	padding: 5px;
+}
+
+#lock {
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+	opacity: .3;
+	font-size: 70px;
+	font-family: sans-serif;
+	display: none;
+}
+
+select:focus {
+	outline: 0;
+}
+
+.header {
+	margin: 0;
+	font-family: Arial, sans-serif;
+	font-size: 20px;
+	font-weight: 700;
+}
+
+#help,
+#share {
+	font-size: 14px;
+	font-family: Arial, sans-serif;
+	font-weight: 400;
+	color: rgb(60,60,60);
+	position: absolute;
+	border: 1px solid rgb(200,200,200);
+	border-radius: 5px;
+	background: white;
+	display: none;
+	top: 1px;
+	right: 3px;
+	padding: 10px;
+	max-height: 85%;
+	overflow-y: auto;
+}
+
+#help {
+	width: 350px;
+}
+
+#share {
+	width: 250px;
+}
+
+#help-nav {
+	text-align: center;
+}
+
+#share-name {
+	margin-right: 5px;
+}
+
+input {
+	width: 100%;
+    border: 1px solid rgb(200,200,200);
+	border-radius: 2px;
+	padding-left: 5px;
+}
+
+input:focus {
+    border: 1px solid rgb(200, 150, 150);
+    outline: none;
+}
+
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.input-wrapper {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 5px;
+}
+
+.share-page {
+	display: none;
+}
+
+#share-button {
+	float: right;
+	border: 1px solid;
+	border-radius: 2px;
+	color: rgb(198, 95, 95);
+	background-color: white;
+	height: 24px;
+}
+
+#link {
+	border-top-right-radius: 0px;
+	border-bottom-right-radius: 0px;
+	border-right: none;
+}
+
+#link:focus {
+	border-color: rgb(198, 95, 95);
+	border-width: 2px;
+}
+
+#copy-link {
+	border-top-left-radius: 0px;
+	border-bottom-left-radius: 0px;
+	border-top-right-radius: 2px;
+	border-bottom-right-radius: 2px;
+	color: white;
+	border: none;
+	background-color: rgb(198, 95, 95);
+	width: 55px;
+	height: 27px;
+}
+
+#copy-link:hover {
+	background-color: rgb(203, 100, 100);
+}
+
+#copy-link:active {
+	background-color: rgb(203, 90, 90);
+}
+
+button {
+	cursor: pointer;
+}
+
+button:focus {
+	outline: 0;
+}
+
+#share-button:hover {
+	background-color: rgb(255,245,245);
+}
+
+#share-button:active {
+	background-color: rgb(255,230,230);
+}
+
+a {
+	font-family: Arial, sans-serif;
+	font-weight: 400;
+	color: rgb(200, 0, 0);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.help-btn-enabled {
+	cursor: pointer;
+	text-decoration: underline;
+	color: rgb(150, 0, 50);
+}
+
+.help-btn-enabled:active {
+	cursor: pointer;
+	text-decoration: underline;
+	color: rgb(200, 0, 70);
+}
+
+.help-btn-disabled {
+	color: black;
+}
+
+a:active {
+	color: red;
+}
+
+.welcome {
+	display: none;
+	text-align: center;
+}
+
+#menu {
+	width: 120px;
+	box-shadow: 0 3px 4px 2px rgba(0, 0, 0, .2);
+	background: white;
+	position: fixed;
+	display: none;
+}
+
+#menu-options {
+	list-style: none;
+	margin: 5px 0px;
+	padding: 0;
+}
+
+.menu-option {
+	font-family: Arial, sans-serif;
+	font-size: 12px;
+	padding: 10px 20px 10px 20px;
+	cursor: pointer;
+}
+
+.menu-option:hover {
+	background: rgba(0, 0, 0, .2);
+}
+
+#header-right {
+	right: 20px;
+	position: absolute;
+	margin-top: 3px;
+	font-family: Arial, sans-serif;
+	font-size: 14px;
+}
+
+.header-link {
+	color: rgb(200,200,200);
+}
+
+.header-link:hover {
+	color: white;
+}
+
+.header-link:active {
+	color: rgb(200,200,200);
+}
+
+.header-link-active {
+	color: white;
+}
+
+#name, #data {
+	display: none;
+}
+
+::selection {
+	background: #ffddd7;
+}
+
+::-moz-selection {
+	background: #ffddd7;
+}
