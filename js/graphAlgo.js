@@ -215,185 +215,6 @@ const app = new PIXI.Application({
 let viewport;
 let graph;
 
-// Set up event functions for the graph
-function setupGraphInteractivity(graph, viewport) {
-
-	// Hashtable of interactions relevant to a node (event data, dragging, edge creation...)
-	let nodeInteractions = new FakeHashtable();
-
-	// Temp variables for candidates nodes for new edges
-	let newEdgeFromNode;
-	let newEdgeToNode;
-
-	graph.onNodePointerDown((event, node) => {
-		viewport.pause = true; // prevent panning
-
-		nodeInteractions.softPut(node, {});
-		const nodeData = nodeInteractions.get(node);
-
-		if (event.data.originalEvent.button === 0) {
-			nodeData.data = event.data;
-			if (keys['Control']) {
-				nodeData.creatingEdge = true;
-			}else{
-				node.graphics.alpha = 0.5;
-				nodeData.dragging = true;
-			}
-		} else if (event.data.originalEvent.button === 2) {
-			// setTimeout so this is added to the end of the stack and overrides the "Add Node" menu
-			setTimeout(() => {
-				createContextMenu(event.data.originalEvent.pageX,
-					event.data.originalEvent.pageY,
-					[
-						{
-							text: "Delete Node",
-							onclick: function() { graph.removeNode(node); }
-						},
-						{
-							text: "Set as default",
-							onclick: function() { node.setType(NODE_TYPES.DEFAULT); }
-						},
-						{
-							text: "Set as source",
-							onclick: function() { node.setType(NODE_TYPES.SOURCE); }
-						},
-						{
-							text: "Set as target",
-							onclick: function() { node.setType(NODE_TYPES.TARGET); }
-						}
-					]);
-			},0);
-		}
-	});
-
-	graph.onNodePointerUp((event, node) => {
-		viewport.pause = false; // allow panning again
-
-		nodeInteractions.softPut(node, {});
-		const nodeData = nodeInteractions.get(node);
-
-		node.dehighlight();
-		if (nodeData.dragging) {
-			node.graphics.alpha = 1;
-			nodeData.dragging = false;
-		}
-		if (nodeData.creatingEdge) {
-			nodeData.creatingEdge = false;
-			if (nodeData.edgePreview) {
-				nodeData.edgePreview.removeChildren();
-				nodeData.edgePreview = null;
-			}
-		}
-		newEdgeToNode = node;
-	});
-
-	graph.onNodePointerUpOutside((event, node) => {
-		nodeInteractions.softPut(node, {});
-		const nodeData = nodeInteractions.get(node);
-
-		viewport.pause = false;	
-		if (nodeData.dragging) {
-			node.graphics.alpha = 1;
-			nodeData.dragging = false;
-		}
-		if (nodeData.creatingEdge) {
-			newEdgeFromNode = node;
-			nodeData.creatingEdge = false;
-			if (nodeData.snappedPreview) {
-				nodeData.snappedPreview.graphics.destroy();
-			}
-			if (nodeData.edgePreview) {
-				nodeData.edgePreview.removeChildren();
-				nodeData.edgePreview = null;
-			}
-		}
-		// setTimeout so this happens after both the parent node's onNodePointerUpOutside and
-		// the child node's onNodePointerUp are triggered beforehand
-		setTimeout(() =>{
-			if (newEdgeToNode && newEdgeFromNode) {
-				nodeInteractions.get(newEdgeFromNode).snappedPreview.graphics.destroy();
-				graph.toggleNodeConnection(newEdgeFromNode, newEdgeToNode);
-			}
-			newEdgeFromNode = null;
-			newEdgeToNode = null;
-		},1);
-	});
-
-	graph.onNodePointerMove((event, node) => {
-		newEdgeFromNode = null;
-		newEdgeToNode = null;
-
-		nodeInteractions.softPut(node, {});
-		const nodeData = nodeInteractions.get(node);
-
-		if (!nodeData.data)
-			return;
-
-		const x = (nodeData.data.global.x - viewport.x)/viewport.scale.x;
-		const y = (nodeData.data.global.y - viewport.y)/viewport.scale.y;
-
-		if (nodeData.dragging) {
-			node.graphics.x = x;
-			node.graphics.y = y;
-			graph.updateNodeEdgeArrows(node);
-		}
-		if (nodeData.creatingEdge) {
-			if (nodeData.edgePreview) {
-				nodeData.edgePreview.removeChildren();
-			}else{
-				nodeData.edgePreview = new PIXI.Container();
-				viewport.addChild(nodeData.edgePreview);
-			}
-			nodeData.edgePreview.addChild(generatePIXIArrow(node.position(), new Vector2D(x,y)));
-		}
-	});
-
-	graph.onNodePointerOver((event, node) => {
-		nodeInteractions.softPut(node, {});
-
-		// Nodes that are creating edges
-		const sourceNodes = nodeInteractions.entries()
-			.filter( e => e[1].creatingEdge && e[0] !== node )
-			.map( e => e[0] );
-
-		if (sourceNodes.length) {
-
-			// Nodes that are creating edges and already have an edge with this node
-			const edgeDeletions = sourceNodes.filter( n => graph.edgeConnecting(n, node) );
-			
-			const sourceData = nodeInteractions.get(sourceNodes[0]);
-			sourceData.edgePreview.alpha = 0;
-			if (edgeDeletions.length) {
-				sourceData.snappedPreview = new VisualEdge(edgeDeletions[0], node);
-				sourceData.snappedPreview.setColor(0xFF7777);
-				viewport.addChild(sourceData.snappedPreview.graphics);
-				sourceData.snappedPreview.graphics.zIndex = 4;
-			} else {
-				sourceData.snappedPreview = new VisualEdge(sourceNodes[0], node);
-				sourceData.snappedPreview.setColor(0x777777);
-				viewport.addChild(sourceData.snappedPreview.graphics);
-				node.highlight();
-			}
-		}
-	});
-
-	graph.onNodePointerOut((event, node) => {
-
-		node.dehighlight();
-		
-		// Nodes that are creating edges
-		const sourceNodes = nodeInteractions.entries()
-			.filter( e => e[1].creatingEdge && e[0] !== node )
-			.map( e => e[0] );
-
-		if (sourceNodes.length) {
-			const sourceData = nodeInteractions.get(sourceNodes[0]);
-			nodeInteractions.get(sourceNodes[0]).edgePreview.alpha = 1;
-			sourceData.snappedPreview.graphics.destroy();
-		}
-	});
-}
-
 // Background rectangle
 const bg = new PIXI.Graphics().beginFill(BG_COLOR).lineStyle(0).drawRect(0,0,1,1);
 app.stage.addChild(bg);
@@ -454,28 +275,6 @@ function zoomReset() {
 	viewport.position.y = cHeight/2 - (minY + maxY)/2*scale;
 
 }
-
-function createContextMenu(x,y,items) {
-	$("#menu").css("left",`${x}px`);
-	$("#menu").css("top",`${y}px`);
-	$("#menu-options").empty();
-	for (const item of items) {
-		const li = $('<li/>',{
-			text: item.text,
-			class: 'menu-option'
-		});
-		li.click(item.onclick);
-		li.appendTo('#menu-options');
-	}
-	menuVisibility(true);
-}
-
-function menuVisibility(visible) {
-	$("#menu").css("display", visible ? "block" : "none");
-}
-
-
-window.addEventListener("click", () => menuVisibility(false));
 
 let helpVisible = false;
 let shareVisible = false;
@@ -608,7 +407,9 @@ $(document).keyup(function(e) {
 });
 
 $(window).focus(function() {
-	keys = {};
+	for (const key of Object.keys(keys)){
+		keys[key] = false;
+	}
 });
 
 $(document).ready(function() {
@@ -617,13 +418,21 @@ $(document).ready(function() {
 	app.stage.addChild(viewport);
 	initializeGraph();
 	viewport.addChild(graph.graphics);
-	setupGraphInteractivity(graph, viewport);
+	
+	// Prevent panning on graph interactions
+	graph.graphics.interactive = true;
+	graph.graphics
+		.on('pointerdown', event => { viewport.pause = true; } )
+		.on('pointerup', event => { viewport.pause = false; } )
+		.on('pointerupoutside', event => { viewport.pause = false; } );
+
+	graph.keys = keys;
 	graph.graphics.zIndex = 2;
 
 	document.querySelector("#frame").appendChild(app.view);
 	resizeCanvas();
 
-	$("#menu, canvas").contextmenu( e => e.preventDefault() );
+	$("canvas").contextmenu( e => e.preventDefault() );
 
 	$("#speed-up").click(() => changeSpeed(1));
 	$("#slow-down").click(() => changeSpeed(-1));

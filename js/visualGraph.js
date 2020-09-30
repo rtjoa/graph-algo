@@ -210,14 +210,17 @@ class VisualGraph extends Graph {
 	constructor() {
 		super();
 		this.graphics = new PIXI.Container();
+		this.graphics.sortableChildren = true;
 
-		// All event functions empty by default
-		this._onNodePointerDown = () => {};
-		this._onNodePointerUp = () => {};
-		this._onNodePointerUpOutside = () => {};
-		this._onNodePointerMove = () => {};
-		this._onNodePointerOver = () => {};
-		this._onNodePointerOut = () => {};
+		// Hashtable of interactions relevant to a node (event data, dragging, edge creation...)
+		this.nodeInteractions = new FakeHashtable();
+
+		// Temp variables for candidates nodes for new edges
+		this.newEdgeFromNode;
+		this.newEdgeToNode;
+
+		// Object to keep track of what keys are pressed. Assign in a higher scope.
+		this.keys = null;
 	}
 
 	static fromString(json) {
@@ -312,44 +315,182 @@ class VisualGraph extends Graph {
 		}
 	}
 
-	onNodePointerDown(callback) {
-		this._onNodePointerDown = callback;
+	onNodePointerDown(event, node) {
+		this.nodeInteractions.softPut(node, {});
+		const nodeData = this.nodeInteractions.get(node);
+
+		if (event.data.originalEvent.button === 0) {
+			nodeData.data = event.data;
+			if (this.keys && this.keys['Control']) {
+				nodeData.creatingEdge = true;
+			}else{
+				node.graphics.alpha = 0.5;
+				nodeData.dragging = true;
+			}
+		} else if (event.data.originalEvent.button === 2) {
+			// setTimeout so this is added to the end of the stack and overrides the "Add Node" menu
+			setTimeout(() => {
+				createContextMenu(event.data.originalEvent.pageX,
+					event.data.originalEvent.pageY,
+					[
+						{
+							text: "Delete Node",
+							onclick: () => { this.removeNode(node); }
+						},
+						{
+							text: "Set as default",
+							onclick: function() { node.setType(NODE_TYPES.DEFAULT); }
+						},
+						{
+							text: "Set as source",
+							onclick: function() { node.setType(NODE_TYPES.SOURCE); }
+						},
+						{
+							text: "Set as target",
+							onclick: function() { node.setType(NODE_TYPES.TARGET); }
+						}
+					]);
+			},0);
+		}
 	}
 
-	onNodePointerUp(callback) {
-		this._onNodePointerUp = callback;
+	onNodePointerUp(event, node) {
+		this.nodeInteractions.softPut(node, {});
+		const nodeData = this.nodeInteractions.get(node);
+
+		node.dehighlight();
+		if (nodeData.dragging) {
+			node.graphics.alpha = 1;
+			nodeData.dragging = false;
+		}
+		if (nodeData.creatingEdge) {
+			nodeData.creatingEdge = false;
+			if (nodeData.edgePreview) {
+				nodeData.edgePreview.removeChildren();
+				nodeData.edgePreview = null;
+			}
+		}
+		this.newEdgeToNode = node;
 	}
 
-	onNodePointerUpOutside(callback) {
-		this._onNodePointerUpOutside = callback;
+	onNodePointerUpOutside(event, node) {
+		this.nodeInteractions.softPut(node, {});
+		const nodeData = this.nodeInteractions.get(node);
+
+		if (nodeData.dragging) {
+			node.graphics.alpha = 1;
+			nodeData.dragging = false;
+		}
+		if (nodeData.creatingEdge) {
+			this.newEdgeFromNode = node;
+			nodeData.creatingEdge = false;
+			if (nodeData.snappedPreview) {
+				nodeData.snappedPreview.graphics.destroy();
+			}
+			if (nodeData.edgePreview) {
+				nodeData.edgePreview.removeChildren();
+				nodeData.edgePreview = null;
+			}
+		}
+		// setTimeout so this happens after both the parent node's onNodePointerUpOutside and
+		// the child node's onNodePointerUp are triggered beforehand
+		setTimeout(() =>{
+			if (this.newEdgeToNode && this.newEdgeFromNode) {
+				this.nodeInteractions.get(this.newEdgeFromNode).snappedPreview.graphics.destroy();
+				this.toggleNodeConnection(this.newEdgeFromNode, this.newEdgeToNode);
+			}
+			this.newEdgeFromNode = null;
+			this.newEdgeToNode = null;
+		},1);
 	}
 
-	onNodePointerMove(callback) {
-		this._onNodePointerMove = callback;
+	onNodePointerMove(event, node) {
+		this.newEdgeFromNode = null;
+		this.newEdgeToNode = null;
+
+		this.nodeInteractions.softPut(node, {});
+		const nodeData = this.nodeInteractions.get(node);
+
+		if (!nodeData.data)
+			return;
+
+		const wt = this.graphics.worldTransform;
+		// Calculate global position, even if parent is moved/scaled.
+		let x = (nodeData.data.global.x - wt.tx) / wt.a;
+		let y = (nodeData.data.global.y - wt.ty) / wt.d;
+		if (nodeData.dragging) {
+			node.graphics.x = x;
+			node.graphics.y = y;
+			this.updateNodeEdgeArrows(node);
+		}
+		if (nodeData.creatingEdge) {
+			if (nodeData.edgePreview) {
+				nodeData.edgePreview.removeChildren();
+			} else {
+				nodeData.edgePreview = new PIXI.Container();
+				nodeData.edgePreview.zIndex = 0;
+				this.graphics.addChild(nodeData.edgePreview);
+			}
+			nodeData.edgePreview.addChild(generatePIXIArrow(node.position(), new Vector2D(x,y)));
+		}
 	}
 
-	onNodePointerOver(callback) {
-		this._onNodePointerOver = callback;
+	onNodePointerOver(event, node) {
+		this.nodeInteractions.softPut(node, {});
+
+		// Nodes that are creating edges
+		const sourceNodes = this.nodeInteractions.entries()
+			.filter( e => e[1].creatingEdge && e[0] !== node )
+			.map( e => e[0] );
+
+		if (sourceNodes.length) {
+
+			// Nodes that are creating edges and already have an edge with this node
+			const edgeDeletions = sourceNodes.filter( n => graph.edgeConnecting(n, node) );
+			
+			const sourceData = this.nodeInteractions.get(sourceNodes[0]);
+			sourceData.edgePreview.alpha = 0;
+			if (edgeDeletions.length) {
+				sourceData.snappedPreview = new VisualEdge(edgeDeletions[0], node);
+				sourceData.snappedPreview.setColor(0xFF7777);
+				this.graphics.addChild(sourceData.snappedPreview.graphics);
+				sourceData.snappedPreview.graphics.zIndex = 4;
+			} else {
+				sourceData.snappedPreview = new VisualEdge(sourceNodes[0], node);
+				sourceData.snappedPreview.setColor(0x777777);
+				this.graphics.addChild(sourceData.snappedPreview.graphics);
+				node.highlight();
+			}
+		}
 	}
 
-	onNodePointerOut(callback) {
-		this._onNodePointerOut = callback;
+	onNodePointerOut(event, node) {
+		node.dehighlight();
+		
+		// Nodes that are creating edges
+		const sourceNodes = this.nodeInteractions.entries()
+			.filter( e => e[1].creatingEdge && e[0] !== node )
+			.map( e => e[0] );
+
+		if (sourceNodes.length) {
+			const sourceData = this.nodeInteractions.get(sourceNodes[0]);
+			this.nodeInteractions.get(sourceNodes[0]).edgePreview.alpha = 1;
+			sourceData.snappedPreview.graphics.destroy();
+		}
 	}
 
 	_setupNodeInteractivity(node) {
-		const thisGraph = this;
 		node.graphics.interactive = true;
 		node.graphics.buttonMode = true;
 		node.graphics.zIndex = 1;
 		node.graphics
-			.on('pointerdown', event => thisGraph._onNodePointerDown(event, node) )
-			.on('pointerup', event => thisGraph._onNodePointerUp(event, node) )
-			.on('pointerupoutside', event => thisGraph._onNodePointerUpOutside(event, node) )
-			.on('pointermove', event => thisGraph._onNodePointerMove(event, node) )
-			.on('pointerover', event => thisGraph._onNodePointerOver(event, node) )
-			.on('pointerout', event => thisGraph._onNodePointerOut(event, node) );
+			.on('pointerdown', event => this.onNodePointerDown(event, node) )
+			.on('pointerup', event => this.onNodePointerUp(event, node) )
+			.on('pointerupoutside', event => this.onNodePointerUpOutside(event, node) )
+			.on('pointermove', event => this.onNodePointerMove(event, node) )
+			.on('pointerover', event => this.onNodePointerOver(event, node) )
+			.on('pointerout', event => this.onNodePointerOut(event, node) );
 	}
-
 }
 
 // Generate an arrow in a PIXI.Container given two Vector2Ds and a color (optional)
@@ -365,4 +506,52 @@ function generatePIXIArrow(fromVector, toVector, color) {
 	head.rotation = Math.PI-toVector.minus(fromVector).direction();
 	arrow.addChild(head);
 	return arrow;
+}
+
+function createContextMenu(x,y,items) {
+	const menu = $('<div/>');
+	menu.css("left",`${x}px`);
+	menu.css("top",`${y}px`);
+	menu.css("width", "120px");
+	menu.css("box-shadow", "0 3px 4px 2px rgba(0, 0, 0, .2)");
+	menu.css("background", "white");
+	menu.css("position", "fixed");
+	menu.contextmenu( e => e.preventDefault() );
+	const menuOptions = $('<ul/>');	
+	menuOptions.css("list-style", "none");
+	menuOptions.css("margin", "5px 0px");
+	menuOptions.css("padding", "0");
+	
+	for (const item of items) {
+		const li = $('<li/>',{
+			text: item.text
+		});
+		li.css("font-family", "Arial, sans-serif");
+		li.css("font-size", "12px");
+		li.css("padding", "10px 20px 10px 20px");
+		li.css("cursor", "pointer");
+		li.mouseenter(function(){
+			$(this).css("background", "rgba(0, 0, 0, .2)");
+		});
+		li.mouseleave(function(){
+			$(this).css("background", "");
+		});
+		li.click(() => {
+			item.onclick();
+			removeMenu();
+		});
+		li.appendTo(menuOptions);
+	}
+	menuOptions.appendTo(menu);
+	menu.appendTo("body");
+	const removeMenu = (e) => {
+		const clickedMenu = e && e.path.includes(menu[0])
+		if (!clickedMenu) {
+			menu.remove();
+			window.removeEventListener("mousedown", removeMenu);
+		}
+	};
+	setTimeout(() => {
+		window.addEventListener("mousedown", removeMenu);
+	}, 0);
 }

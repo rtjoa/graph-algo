@@ -184,10 +184,6 @@ if (isset($graph['name'])) {
 				</div>
 			</div>
 		</div>
-		<div id="menu">
-			<ul id="menu-options">
-			</ul>
-		</div>
 <?php
 if (!isset($_COOKIE['returning'])) {
 	print("<script>newVisitor()</script>");
