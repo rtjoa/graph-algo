@@ -19,7 +19,7 @@ if (paramsComplete($_GET,['g'])) {
 <?php
 print("<title>");
 if (isset($graph['name'])) {
-	print($graph['name']);
+	print(htmlspecialchars($graph['name']));
 } else {
 	print("GraphAlgo");
 }
@@ -39,12 +39,12 @@ print("</title>")
 <?php
 print('<div id="name">');
 if (isset($graph['name'])) {
-	print($graph['name']);
+	print(htmlspecialchars($graph['name']));
 }
 print('</div>');
 print('<div id="data">');
 if (isset($graph['data'])) {
-	print($graph['data']);
+	print(htmlspecialchars($graph['data']));
 }
 print('</div>');
 ?>
@@ -53,7 +53,7 @@ print('</div>');
 				Graph<strong>Algo</strong>
 <?php
 if (isset($graph['name'])) {
-	print(" | " . (empty($graph['name']) ? "Untitled Graph" : $graph['name']));
+	print(" | " . (empty($graph['name']) ? "Untitled Graph" : htmlspecialchars($graph['name'])));
 }
 ?>
 				<span id="header-right">
