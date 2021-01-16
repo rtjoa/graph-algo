@@ -330,26 +330,21 @@ class VisualGraph extends Graph {
 		} else if (event.data.originalEvent.button === 2) {
 			// setTimeout so this is added to the end of the stack and overrides the "Add Node" menu
 			setTimeout(() => {
-				createContextMenu(event.data.originalEvent.pageX,
-					event.data.originalEvent.pageY,
-					[
-						{
-							text: "Delete Node",
-							onclick: () => { this.removeNode(node); }
-						},
-						{
-							text: "Set as default",
-							onclick: function() { node.setType(NODE_TYPES.DEFAULT); }
-						},
-						{
-							text: "Set as source",
-							onclick: function() { node.setType(NODE_TYPES.SOURCE); }
-						},
-						{
-							text: "Set as target",
-							onclick: function() { node.setType(NODE_TYPES.TARGET); }
-						}
-					]);
+				const items = [{
+					text: "Delete Node",
+					onclick: () => { this.removeNode(node); }
+				}];
+				
+				for (const [typeName, type] of Object.entries(NODE_TYPES)){
+					if (type != node.type) {
+						items.push({
+							text: `Set as ${typeName.toLowerCase()}`,
+							onclick: function() { node.setType(type) }
+						});
+					}
+				}
+
+				createContextMenu(event.data.originalEvent.pageX, event.data.originalEvent.pageY, items);
 			},0);
 		}
 	}
