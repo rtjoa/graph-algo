@@ -64,12 +64,24 @@ const GREEDY = {
 	heuristic: (_, node, __, target) => ({ cost: node.distanceTo(target) })
 };
 
+// Always choose node furthest to target
+const SCARED = {
+	heuristic: (_, node, __, target) => ({ cost: -node.distanceTo(target) })
+};
+
+// Choose node at random
+const RANDOM = {
+	heuristic: () => ({ cost: {valueOf: () => Math.random()} })
+};
+
 const algos = {
 	bfs: BREADTH_FIRST,
 	dfs: DEPTH_FIRST,
 	dijkstra: DIJKSTRA,
 	aStar: A_STAR,
-	greedy: GREEDY
+	greedy: GREEDY,
+	scared: SCARED,
+	random: RANDOM,
 };
 
 const COLOR_CURRENT = 0x00FF00;
@@ -370,6 +382,13 @@ function setSharePage(name) {
 	$("#share-name").val($("#name").html());
 	$("#copy-link-text").text("Copy");
 	clearTimeout(copyFadeTimeout);
+}
+
+function unlockAlgos() {
+	document.querySelector('#algo-select').innerHTML +=
+		'<option value="scared">Scared Search</option>'
+		+ '<option value="random">Random Search</option>';
+	document.querySelector('#unlock-algos').remove();
 }
 
 function newVisitor() {

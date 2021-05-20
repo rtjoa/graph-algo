@@ -208,21 +208,31 @@ select:focus {
 	display: none;
 	top: 1px;
 	right: 3px;
-	padding: 10px;
 	max-height: 85%;
 	overflow-y: auto;
 }
 
 #help {
 	width: 350px;
+	padding: 10px 10px 20px 10px;
 }
 
 #share {
 	width: 250px;
+	padding: 10px;
 }
 
 #help-nav {
 	text-align: center;
+}
+
+#unlock-algos {
+	color: grey;
+	font-size: 12px;
+}
+
+#unlock-algos a {
+	color: rgb(140, 20, 20);
 }
 
 #share-name {

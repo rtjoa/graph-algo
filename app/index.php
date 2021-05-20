@@ -140,6 +140,11 @@ if (isset($graph['name'])) {
 					<div>
 						Explores the node with the lowest straight-line distance to target.
 					</div>
+					
+					<span id="unlock-algos">
+						<br>
+						<em>psst... I hear there are <a onclick="unlockAlgos()">a few others</a></em>
+					</span>
 				</div>
 				<div class="help-page" name="controls">
 					<span class="header">Controls</span><br><br>
@@ -164,7 +169,7 @@ if (isset($graph['name'])) {
 				</div>
 				<div class="welcome">
 					<br><em>Click off this dialogue to dismiss. To re-show, click "?" in the top-right.</em>
-				</div><br>
+				</div>
 			</div>
 			<div id="share">
 				<div class="share-page" name="title">
