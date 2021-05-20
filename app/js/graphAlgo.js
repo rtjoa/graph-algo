@@ -304,12 +304,7 @@ let welcomeVisible = false;
 function setHelpVisibility(visible) {
 	if (!visible || !welcomeVisible) {
 		welcomeVisible = false;
-		$("#help").css({
-			"top": "1px",
-			"right": "3px",
-			"transform": "none",
-			"width": "350px"
-		});
+		$("#help").removeClass("first-time");
 		$(".welcome").css("display", "none");
 	}
 	helpVisible = visible;
@@ -388,7 +383,8 @@ function unlockAlgos() {
 	document.querySelector('#algo-select').innerHTML +=
 		'<option value="scared">Scared Search</option>'
 		+ '<option value="random">Random Search</option>';
-	document.querySelector('#unlock-algos').remove();
+	document.querySelector('#unlock-algos').style.display = 'none';
+	document.querySelector("#algo-select").value = "scared";
 }
 
 function newVisitor() {
@@ -396,12 +392,7 @@ function newVisitor() {
 	$(document).ready(() => {
 		setHelpVisibility(true);
 		$(".welcome").css("display", "block");
-		$("#help").css({
-			"top": "20px",
-			"right": "50%",
-			"transform": "translateX(50%)",
-			"width": "500px"
-		});
+		$("#help").addClass("first-time");
 	});
 }
 $(document).click(function(event) {

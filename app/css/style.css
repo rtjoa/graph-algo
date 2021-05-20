@@ -217,6 +217,17 @@ select:focus {
 	padding: 10px 10px 20px 10px;
 }
 
+#help.first-time {
+	top: 20px;
+	right: 50%;
+	transform: translateX(50%);
+	width: 500px;
+}
+
+#help.first-time #unlock-algos {
+	display: none;
+}
+
 #share {
 	width: 250px;
 	padding: 10px;
