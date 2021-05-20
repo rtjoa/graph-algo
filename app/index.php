@@ -84,6 +84,7 @@ if (isset($graph['name'])) {
 					<select id="algo-select">
 						<option value="bfs">Breadth-First Search</option>
 						<option value="dfs">Depth-First Search</option>
+						<option value="dijkstra">Dijkstra's Algorithm</option>
 						<option value="aStar">A* Search</option>
 						<option value="greedy">Greedy Best-First Search</option>
 					</select>
@@ -120,6 +121,12 @@ if (isset($graph['name'])) {
 					<strong>Depth-First Search</strong> (Unweighted)
 					<div>
 						Explores the node that is the most steps from source.
+					</div><br>
+
+					<strong>Dijkstra's Algorithm</strong> (Weighted)
+					<div>
+						Explores the node with the lowest travel distance from source.
+						Optimizes travel distance.
 					</div><br>
 
 					<strong>A*</strong> (Weighted)

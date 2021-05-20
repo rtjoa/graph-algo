@@ -41,6 +41,14 @@ const DEPTH_FIRST = {
 	initData: {cost: 0}
 };
 
+// Choose node with lowest travel distance from start
+const DIJKSTRA = {
+	heuristic: (parentData, node, parent) => {
+		return {cost: parentData.cost + parent.distanceTo(node)};
+	},
+	initData: {cost: 0}
+};
+
 // Calculates f/g/h costs. f cost stored as main cost b/c it decides priority.
 const A_STAR = {
 	heuristic: (parentData, node, parent, target) => {
@@ -59,6 +67,7 @@ const GREEDY = {
 const algos = {
 	bfs: BREADTH_FIRST,
 	dfs: DEPTH_FIRST,
+	dijkstra: DIJKSTRA,
 	aStar: A_STAR,
 	greedy: GREEDY
 };
